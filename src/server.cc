@@ -32,7 +32,7 @@ public:
     {
         try
         {
-            module = torch::jit::load("/app/src/demo_model.pt");
+            module = torch::jit::load("/app/src/mlp.pt");
         }
         catch (const c10::Error &e)
         {
@@ -87,7 +87,7 @@ private:
 
         json output;
         output["smiles"] = request.body();
-        output["preds"] = predVec;
+        output["pred"] = predVec;
 
         response.send(Http::Code::Ok, output.dump());
     }
@@ -108,7 +108,6 @@ int main(int argc, char *argv[])
     if (argc >= 2)
     {
         port = std::stol(argv[1]);
-
         if (argc == 3)
             thr = std::stol(argv[2]);
     }
