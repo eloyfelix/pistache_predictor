@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_PREFIX_PATH "/libtorch/share/cmake/Torch")
 find_package(Torch REQUIRED)
+find_package(Pistache REQUIRED)
 
 add_executable(${PROJECT_NAME} src/server.cc)
 

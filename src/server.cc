@@ -42,8 +42,7 @@ public:
 
     void init(size_t thr = 2)
     {
-        auto opts = Http::Endpoint::options()
-                        .threads(thr);
+        auto opts = Http::Endpoint::options().threads(thr);
         httpEndpoint->init(opts);
         setupRoutes();
     }
@@ -59,27 +58,24 @@ private:
     {
         using namespace Rest;
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
-        Routes::Post(router, "/mcp", Routes::bind(&TargetPredictions::mcp, this));
+        Routes::Post(router, "/predict", Routes::bind(&TargetPredictions::predict, this));
     }
 
-    void mcp(const Rest::Request &request, Http::ResponseWriter response)
+    void predict(const Rest::Request &request, Http::ResponseWriter response)
     {
-        // load mol from body SMILES
+        // Load mol from request body SMILES.
         std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(request.body()));
 
-        // calculate fps
-        RDKit::SparseIntVect<std::uint32_t> *fp = new RDKit::SparseIntVect<std::uint32_t>(fpSize);
+        // Calculate the fingerprints
+        auto *fp = new RDKit::SparseIntVect<std::uint32_t>(fpSize);
         fp = RDKit::MorganFingerprints::getHashedFingerprint(*mol, 2, fpSize);
 
-        // torch tensor to store query fps and copy the on bits on it
+        // Copy the on bits to a zeros tensor.
         at::Tensor fpTensor = torch::zeros({1, fpSize});
         for (int i = 1; i < fpSize; ++i)
-        {
             if (fp->getVal(i) == 1)
-            {
-                fpTensor[0][i] = fp->getVal(i);
-            }
-        }
+                fpTensor[0][i] = 1;
+        delete fp;
 
         // Create a vector of inputs.
         std::vector<torch::jit::IValue> inputs;
@@ -87,11 +83,11 @@ private:
 
         // Execute the model and turn its output into a tensor.
         at::Tensor preds = module.forward(inputs).toTensor();
-        std::vector<float> predV(preds.data_ptr<float>(), preds.data_ptr<float>() + preds.numel());
+        std::vector<float> predVec(preds.data_ptr<float>(), preds.data_ptr<float>() + preds.numel());
 
         json output;
         output["smiles"] = request.body();
-        output["preds"] = predV;
+        output["preds"] = predVec;
 
         response.send(Http::Code::Ok, output.dump());
     }

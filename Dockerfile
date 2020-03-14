@@ -1,24 +1,14 @@
-FROM ubuntu:disco
+FROM debian:buster-slim
 
 ARG RDKIT_VERSION=Release_2019_09_3
 
-RUN apt-get update && \
-    apt-get install -y gnupg2 && \
-    apt-get -qq -y autoremove && \
-    apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
-
-RUN echo deb http://ppa.launchpad.net/pistache+team/unstable/ubuntu disco main >> /etc/apt/sources.list
-RUN echo deb-src http://ppa.launchpad.net/pistache+team/unstable/ubuntu disco main  >> /etc/apt/sources.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 2EEA295DCBF66B6DE281E0A193E2268577BD194B 
-
-# install required ubuntu packages
 RUN apt-get update --fix-missing && \
-    apt-get install -y nlohmann-json-dev \
-                       libpistache-dev \
+    apt-get install -y g++ \
                        cmake \
                        curl \
                        unzip \
+                       git \
+                       nlohmann-json-dev \
                        libboost-dev \
                        libboost-iostreams-dev \
                        libboost-system-dev \
@@ -27,8 +17,7 @@ RUN apt-get update --fix-missing && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
 
-# download and instal rdkit
-# https://github.com/rdkit/rdkit/blob/master/CMakeLists.txt
+# Install RDKit
 RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
     tar -xzf ${RDKIT_VERSION}.tar.gz && \
     mv rdkit-${RDKIT_VERSION} rdkit && \
@@ -44,23 +33,32 @@ RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
           -DRDK_BUILD_CPP_TESTS=OFF \
           .. && \
     make -j $(nproc) && \
-    make install
+    make install && \
+    rm -rf /rdkit /${RDKIT_VERSION}.tar.gz
 
-# download Torch
+# Install pistache
+RUN git clone https://github.com/oktal/pistache.git && \
+    cd pistache && \
+    git submodule update --init && \
+    mkdir build && \
+    cd build && \
+    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. && \
+    make && \
+    make install && \
+    rm -rf /pistache*
+
+# Install torchlib
 RUN curl -LO https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip && \
-    unzip libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
+    unzip libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip && \
+    rm libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
 
-# assertion failure if ran in / directory
 COPY src app/src
-COPY cmake app/cmake
 COPY CMakeLists.txt app/CMakeLists.txt
 
-WORKDIR /app
-
-RUN mkdir build && \
-    cd build && \
+RUN mkdir app/build && \
+    cd app/build && \
     cmake .. && \
     make && \
-    cp PistachePredictor ../PistachePredictor
+    cp PistachePredictor ../../PistachePredictor
 
-CMD ["./PistachePredictor"]
+CMD ["./PistachePredictor", "9999", "4"]
