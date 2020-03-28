@@ -1,12 +1,12 @@
 # Target predictions C++ REST microservice with libtorch, RDKit and Pistache
 
-Example of an histone deacetylase 3 multilayer perceptron model trained in Python's [PyTorch](https://pytorch.org/)(1.4) and [serialized](https://pytorch.org/tutorials/advanced/cpp_export.html) to be used in C++ as a [Pistache](https://github.com/oktal/pistache) powered REST microservice. This only pretends to be an example of how to glue all components together.
+Example of an histone deacetylase 3 multilayer perceptron "dummy" model trained in Python's [PyTorch](https://pytorch.org/)(1.4) and [serialized](https://pytorch.org/tutorials/advanced/cpp_export.html) to be used in C++ as a [Pistache](https://github.com/oktal/pistache) powered REST microservice.
+
+This miniproject only pretends to be an example of how to glue LibTorch, [RDKit](https://www.rdkit.org/docs/index.html) and Pistache in C++ starting from a Python trained model.
 
 ## To run it
 
-### Build the Docker image and run it
-
-The included Dockerfile downloads and compiles [RDKit](https://www.rdkit.org/docs/index.html) along with all other dependecies:
+### Build the Docker image and run a container
 
 ```bash
 docker build -t pistache_predictor .

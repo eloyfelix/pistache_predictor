@@ -63,33 +63,47 @@ private:
 
     void predict(const Rest::Request &request, Http::ResponseWriter response)
     {
-        // Load mol from request body SMILES.
-        std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(request.body()));
+        try
+        {
+            std::string smiles(request.body());
 
-        // Calculate the fingerprints
-        auto *fp = new RDKit::SparseIntVect<std::uint32_t>(fpSize);
-        fp = RDKit::MorganFingerprints::getHashedFingerprint(*mol, 2, fpSize);
+            std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(smiles));
+            if (!mol)
+            {
+                std::cerr << "Cannot create molecule from : '" << smiles << "'" << std::endl;
+                response.send(Http::Code::Internal_Server_Error, "Cannot create molecule from : '" + smiles + "'");
+            }
+            else
+            {
+                // Calculate the fingerprints
+                std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> fp(RDKit::MorganFingerprints::getHashedFingerprint(*mol, 2, fpSize));
 
-        // Copy the on bits to a zeros tensor.
-        at::Tensor fpTensor = torch::zeros({1, fpSize});
-        for (int i = 1; i < fpSize; ++i)
-            if (fp->getVal(i) == 1)
-                fpTensor[0][i] = 1;
-        delete fp;
+                // Copy the on bits to a zeros tensor.
+                at::Tensor fpTensor = torch::zeros({1, fpSize});
+                for (int i = 1; i < fpSize; ++i)
+                    if (fp->getVal(i) == 1)
+                        fpTensor[0][i] = 1;
 
-        // Create a vector of inputs.
-        std::vector<torch::jit::IValue> inputs;
-        inputs.push_back(fpTensor);
+                // Create a vector of inputs.
+                std::vector<torch::jit::IValue> inputs;
+                inputs.push_back(fpTensor);
 
-        // Execute the model and turn its output into a tensor.
-        at::Tensor preds = module.forward(inputs).toTensor();
-        std::vector<float> predVec(preds.data_ptr<float>(), preds.data_ptr<float>() + preds.numel());
+                // Execute the model and turn its output into a tensor.
+                at::Tensor preds = module.forward(inputs).toTensor();
+                std::vector<float> predVec(preds.data_ptr<float>(), preds.data_ptr<float>() + preds.numel());
 
-        json output;
-        output["smiles"] = request.body();
-        output["pred"] = predVec;
+                json output;
+                output["smiles"] = request.body();
+                output["pred"] = predVec;
 
-        response.send(Http::Code::Ok, output.dump());
+                response.send(Http::Code::Ok, output.dump());
+            }
+        }
+        catch (RDKit::MolSanitizeException &e)
+        {
+            std::cerr << e.what() << std::endl;
+            response.send(Http::Code::Internal_Server_Error, e.what());
+        }
     }
 
     std::shared_ptr<Http::Endpoint> httpEndpoint;
