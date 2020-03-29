@@ -1,8 +1,8 @@
-# Target predictions C++ REST microservice with libtorch, RDKit and Pistache
+# Target predictions C++ REST microservice with LibTorch, RDKit and Pistache
 
-Example of an histone deacetylase 3 multilayer perceptron "dummy" model trained in Python's [PyTorch](https://pytorch.org/)(1.4) and [serialized](https://pytorch.org/tutorials/advanced/cpp_export.html) to be used in C++ as a [Pistache](https://github.com/oktal/pistache) powered REST microservice.
+Example of an [histone deacetylase 3](https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL1829/) multilayer perceptron "dummy" model trained in Python's [PyTorch](https://pytorch.org/)(1.4) and [serialized](https://pytorch.org/tutorials/advanced/cpp_export.html) to be used in C++ as a [Pistache](https://github.com/oktal/pistache) powered REST microservice. Molecular fingerprints calculated with [RDKit](https://www.rdkit.org/docs/index.html).
 
-This miniproject only pretends to be an example of how to glue LibTorch, [RDKit](https://www.rdkit.org/docs/index.html) and Pistache in C++ starting from a Python trained model.
+This miniproject only pretends to be an example of how to glue all the different components in C++ using a model previously trained in Python.
 
 ## To run it
 

@@ -75,10 +75,10 @@ private:
             }
             else
             {
-                // Calculate the fingerprints
+                // Calculate the fingerprints.
                 std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> fp(RDKit::MorganFingerprints::getHashedFingerprint(*mol, 2, fpSize));
 
-                // Copy the on bits to a zeros tensor.
+                // Copy the ON bits to a new zeros tensor.
                 at::Tensor fpTensor = torch::zeros({1, fpSize});
                 for (int i = 1; i < fpSize; ++i)
                     if (fp->getVal(i) == 1)

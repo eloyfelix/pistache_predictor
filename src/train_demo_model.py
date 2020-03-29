@@ -49,7 +49,7 @@ train_loader = DataLoader(dataset=train_dataset,
                           shuffle=True)
 
 
-# model definition
+# Multi layer perceptron model definition
 class MLP(torch.nn.Module):
 
     def __init__(self, input_dim):
@@ -68,10 +68,13 @@ class MLP(torch.nn.Module):
 
 
 mlp = MLP(FP_SIZE)
+# loss function and optimizer definition
 criterion = torch.nn.BCELoss()
 optimizer = torch.optim.SGD(mlp.parameters(), lr=0.05)
 
-
+# model training
+# no test nor validation done as we only need
+# a "dummy" trained model to be exported.
 for epoch in range(N_EPOCHS):
     for i, (fps, labels) in enumerate(train_loader):
         optimizer.zero_grad()
@@ -87,5 +90,6 @@ for epoch in range(N_EPOCHS):
                   % (epoch + 1, N_EPOCHS, i + 1, len(train_dataset) // BATCH_SIZE, loss.item()))
 
 
-tsm = torch.jit.trace(mlp, torch.ones(2048))
+# serialize the model to be loaded in LibTorch (C++)
+tsm = torch.jit.trace(mlp, torch.ones(FP_SIZE))
 tsm.save("mlp.pt")
