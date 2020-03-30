@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-ARG RDKIT_VERSION=Release_2020_03_1b1
+ARG RDKIT_VERSION=Release_2020_03_1
 
 RUN apt-get update --fix-missing && \
     apt-get install -y g++ \
