@@ -80,9 +80,8 @@ private:
 
                 // Copy the ON bits to a new zeros tensor.
                 at::Tensor fpTensor = torch::zeros({1, fpSize});
-                for (int i = 1; i < fpSize; ++i)
-                    if (fp->getVal(i) == 1)
-                        fpTensor[0][i] = 1;
+                for (auto iter = fp->getNonzeroElements().begin(); iter != fp->getNonzeroElements().end(); ++iter)
+                    fpTensor[0][iter->first] = 1;
 
                 // Create a vector of inputs.
                 std::vector<torch::jit::IValue> inputs;
