@@ -1,3 +1,7 @@
+"""
+This script trains a multi layer perceptron model and serializes it to be used in LibTorch (C++).
+No test nor validation is done as we only need a "dummy" model to be exported for the demo.
+"""
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 import torch
@@ -15,9 +19,7 @@ N_EPOCHS = 40
 
 
 def calc_morgan_fp(smiles):
-    mol = Chem.MolFromSmiles(smiles, sanitize=False)
-    mol.UpdatePropertyCache(False)
-    Chem.GetSSSR(mol)
+    mol = Chem.MolFromSmiles(smiles)
     fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(
         mol, RADIUS, nBits=FP_SIZE)
     a = np.zeros((0,), dtype=np.float32)
@@ -49,7 +51,7 @@ train_loader = DataLoader(dataset=train_dataset,
                           shuffle=True)
 
 
-# Multi layer perceptron model definition
+# multi layer perceptron model definition
 class MLP(torch.nn.Module):
 
     def __init__(self, input_dim):
@@ -73,8 +75,6 @@ criterion = torch.nn.BCELoss()
 optimizer = torch.optim.SGD(mlp.parameters(), lr=0.05)
 
 # model training
-# no test nor validation done as we only need
-# a "dummy" trained model to be exported.
 for epoch in range(N_EPOCHS):
     for i, (fps, labels) in enumerate(train_loader):
         optimizer.zero_grad()
