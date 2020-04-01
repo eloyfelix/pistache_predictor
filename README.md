@@ -16,10 +16,10 @@ docker run -p9999:9999 pistache_predictor
 ### Query the service:
 
 ```bash
-curl --request POST -d 'Cc1ccccc1-c1ccc(C=NNC(=O)CCCCCC(=O)NO)cc1' http://localhost:9999/predict
+curl --request POST -d "Cc1ccccc1-c1ccc(C=NNC(=O)CCCCCC(=O)NO)cc1" http://localhost:9999/predict
 ```
 
 The trained model is included in the repository but it can be reproduced with the following dataset and script:
 
-- [Dataset](https://github.com/eloyfelix/pistache_predictor/blob/master/src/CHEMBL1829.csv?raw=true) extracted from [ChEMBL](https://www.ebi.ac.uk/chembl).
-- Python [script](https://github.com/eloyfelix/pistache_predictor/blob/master/src/train_demo_model.py) to train the model.
+- [Dataset](https://github.com/eloyfelix/pistache_predictor/blob/master/training/CHEMBL1829.csv?raw=true) extracted from [ChEMBL](https://www.ebi.ac.uk/chembl).
+- Python [script](https://github.com/eloyfelix/pistache_predictor/blob/master/training/train_demo_model.py) to train the model.
