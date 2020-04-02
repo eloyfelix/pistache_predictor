@@ -92,7 +92,7 @@ private:
                 std::vector<float> predVec(preds.data_ptr<float>(), preds.data_ptr<float>() + preds.numel());
 
                 json output;
-                output["smiles"] = request.body();
+                output["smiles"] = smiles;
                 output["pred"] = predVec;
 
                 response.send(Http::Code::Ok, output.dump());
