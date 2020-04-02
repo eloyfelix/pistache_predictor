@@ -7,8 +7,7 @@
 #include <GraphMol/Fingerprints/Fingerprints.h>
 #include <GraphMol/Fingerprints/MorganFingerprints.h>
 
-#include <torch/torch.h>
-#include <torch/script.h>
+#include <onnxruntime_cxx_api.h>
 
 #include <nlohmann/json.hpp>
 
@@ -32,9 +31,24 @@ public:
     {
         try
         {
-            module = torch::jit::load("/app/src/mlp.pt");
+            env = std::move(Ort::Env(ORT_LOGGING_LEVEL_WARNING, "test"));
+
+            // initialize session options if needed
+            Ort::SessionOptions session_options;
+            session_options.SetIntraOpNumThreads(1);
+            session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+            session = std::move(Ort::Session(env, "/app/src/mlp.onnx", session_options));
+
+            Ort::AllocatorWithDefaultOptions allocator;
+
+            // only one input node in this model, using index 0 to get its info
+            input_node_names.push_back(session.GetInputName(0, allocator));
+            Ort::TypeInfo type_info = session.GetInputTypeInfo(0);
+            auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
+            ONNXTensorElementDataType type = tensor_info.GetElementType();
+            input_node_dims = tensor_info.GetShape();
         }
-        catch (const c10::Error &e)
+        catch (...)
         {
             std::cerr << "error loading the model" << std::endl;
         }
@@ -75,21 +89,19 @@ private:
             }
             else
             {
-                // Calculate the fingerprints.
-                std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> fp(RDKit::MorganFingerprints::getHashedFingerprint(*mol, 2, fpSize));
-
-                // Copy the ON bits to a new zeros tensor.
-                at::Tensor fpTensor = torch::zeros({1, fpSize});
+                // calc fingerprints
+                std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> fp(RDKit::MorganFingerprints::getHashedFingerprint(*mol, 2, input_node_dims[0]));
+                std::vector<float> input_tensor_values(input_node_dims[0], 0);
                 for (const auto &iter : fp->getNonzeroElements())
-                    fpTensor[0][iter.first] = 1;
+                    input_tensor_values[iter.first] = 1;
 
-                // Create a vector of inputs.
-                std::vector<torch::jit::IValue> inputs;
-                inputs.push_back(fpTensor);
+                // create input tensor object from data values
+                auto memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+                Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info, input_tensor_values.data(), input_node_dims[0], input_node_dims.data(), 1);
 
-                // Execute the model and turn its output into a tensor.
-                at::Tensor preds = module.forward(inputs).toTensor();
-                std::vector<float> predVec(preds.data_ptr<float>(), preds.data_ptr<float>() + preds.numel());
+                // // score model & input tensor, get back output tensor
+                auto output_tensors = session.Run(Ort::RunOptions{nullptr}, input_node_names.data(), &input_tensor, 1, output_node_names.data(), 1);
+                std::vector<float> predVec(output_tensors.front().GetTensorMutableData<float>(), output_tensors.front().GetTensorMutableData<float>() + output_tensors.size());
 
                 json output;
                 output["smiles"] = smiles;
@@ -105,11 +117,15 @@ private:
         }
     }
 
-    std::shared_ptr<Http::Endpoint> httpEndpoint;
-    torch::jit::script::Module module;
+    Ort::Env env{nullptr};
+    Ort::Session session{nullptr};
+
+    std::vector<const char*> input_node_names;
+    std::vector<const char*> output_node_names = {"output"};
+    std::vector<int64_t> input_node_dims;  
 
     Rest::Router router;
-    int fpSize = 2048;
+    std::shared_ptr<Http::Endpoint> httpEndpoint;
 };
 
 int main(int argc, char *argv[])
