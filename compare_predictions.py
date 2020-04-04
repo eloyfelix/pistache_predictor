@@ -1,5 +1,5 @@
 """
-Script that verifies that the predictions ran in PyTorch, Python's ONNX runtime and in the ONNX C++ backend are the same.
+Script that verifies that the prediction results from the different environments are the same.
 """
 import onnxruntime
 import numpy as np
@@ -36,11 +36,11 @@ with open('training/CHEMBL1829.csv', 'r') as csvfile:
 # calc the FPs
 descs = [calc_morgan_fp(smi) for smi in smiles]
 
-# run predictions with the Python ONNX runtime
+# run the predictions with the Python ONNX runtime
 ort_session = onnxruntime.InferenceSession("src/mlp.onnx")
 ort_preds = np.array([ort_session.run(None, {ort_session.get_inputs()[0].name: fps})[0] for fps in descs])
 
-# run the redictions with the C++ REST backend
+# run the redictions with the C++ REST micro-service (ONNX runtime)
 def pred_cxx(smiles):
     res = requests.post('http://localhost:9999/predict', data=smiles)
     return res.json()['pred']
@@ -56,5 +56,5 @@ tsm.eval()
 with torch.no_grad():
     pt_preds = tsm(torch.Tensor(descs))
 
-# compare C++ REST backend and Python ONNX runtime predictions
+# compare C++ REST backend and PyTorch predictions
 np.testing.assert_allclose(to_numpy(pt_preds), cxx_preds, rtol=1e-03, atol=1e-05)
