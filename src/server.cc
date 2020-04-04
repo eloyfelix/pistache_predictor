@@ -32,16 +32,14 @@ public:
         try
         {
             env = std::move(Ort::Env(ORT_LOGGING_LEVEL_WARNING, "test"));
-
-            // initialize session options if needed
+            // initialize session options if needed and load the model
             Ort::SessionOptions session_options;
             session_options.SetIntraOpNumThreads(1);
             session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
             session = std::move(Ort::Session(env, "/app/src/mlp.onnx", session_options));
 
+            // there is only one input node in this model, using index 0 to get its info
             Ort::AllocatorWithDefaultOptions allocator;
-
-            // only one input node in this model, using index 0 to get its info
             input_node_names.push_back(session.GetInputName(0, allocator));
             Ort::TypeInfo type_info = session.GetInputTypeInfo(0);
             auto tensor_info = type_info.GetTensorTypeAndShapeInfo();

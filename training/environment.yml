@@ -1,9 +1,11 @@
 name: pytorch14
 channels:
-- defaults
-- rdkit
-- pytorch
+    - defaults
+    - conda-forge
+    - pytorch
 dependencies:
-- torch==1.4.0
-- torchvision==0.5.0
-- rdkit==2020.03.01
+    - torch==1.4.0
+    - torchvision==0.5.0
+    - rdkit==2020.03.01
+    - pip:
+        - onnxruntime==1.2.0
