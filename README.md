@@ -1,8 +1,8 @@
-# Target predictions C++ REST microservice with LibTorch, RDKit and Pistache
+# Target predictions C++ REST microservice with ONNX Runtime, RDKit and Pistache
 
-Example of an [histone deacetylase 3](https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL1829/) multilayer perceptron "dummy" model trained in Python's [PyTorch](https://pytorch.org/)(1.4) and [serialized](https://pytorch.org/tutorials/advanced/cpp_export.html) to be used in C++ as a [Pistache](https://github.com/oktal/pistache) powered REST microservice. Molecular fingerprints calculated with [RDKit](https://www.rdkit.org/docs/index.html).
+Example of an [histone deacetylase 3](https://www.ebi.ac.uk/chembl/target_report_card/CHEMBL1829/) multi-layer perceptron "dummy" model trained in Python using [PyTorch](https://pytorch.org/)(1.4), [exported](https://pytorch.org/docs/stable/onnx.html) to the [ONNX](https://onnx.ai/) format and used with the [ONNX Runtime](https://microsoft.github.io/onnxruntime/) in C++ as a [Pistache](https://github.com/oktal/pistache) powered REST microservice. Molecular fingerprints calculated with [RDKit](https://www.rdkit.org/docs/index.html).
 
-This miniproject only pretends to be an example of how to glue all the different components in C++ using a model previously trained in Python.
+This miniproject only pretends to be an example of how the different components can be glued together in C++ using a model previously trained in Python.
 
 ## To run it
 
@@ -23,3 +23,15 @@ The trained model is included in the repository but it can be reproduced with th
 
 - [Dataset](https://github.com/eloyfelix/pistache_predictor/blob/master/training/CHEMBL1829.csv?raw=true) extracted from [ChEMBL](https://www.ebi.ac.uk/chembl).
 - Python [script](https://github.com/eloyfelix/pistache_predictor/blob/master/training/train_demo_model.py) to train the model.
+
+## Results comparison
+
+Prediction results of the PyTorch model and of the ONNX exported model running both in Python and C++ ONNX runtimes are compared with the [compare_predictions.py](https://github.com/eloyfelix/pistache_predictor/blob/master/compare_predictions.py) script. Results are the same for all of them.
+
+## LibTorch
+
+The pistache micro-service is also alternatively implemented using the LibTorch C++ backend. It can be used by replacing the Dockerfile, CMakeLists.txt and server.cc files with:
+
+- [Dockerfile_libtorch](https://github.com/eloyfelix/pistache_predictor/blob/master/Dockerfile_libtorch)
+- [CMakeLists.txt_libtorch](https://github.com/eloyfelix/pistache_predictor/blob/master/CMakeLists.txt_libtorch)
+- [server.cc_libtorch](https://github.com/eloyfelix/pistache_predictor/blob/master/src/server.cc_libtorch)

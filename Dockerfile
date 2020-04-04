@@ -47,10 +47,10 @@ RUN git clone https://github.com/oktal/pistache.git && \
     make install && \
     rm -rf /pistache*
 
-# Install torchlib
-RUN curl -LO https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip && \
-    unzip libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip && \
-    rm libtorch-cxx11-abi-shared-with-deps-1.4.0%2Bcpu.zip
+# Install Ms ONNX runtime
+RUN curl -LO https://github.com/microsoft/onnxruntime/releases/download/v1.2.0/onnxruntime-linux-x64-1.2.0.tgz && \
+    tar -xzf onnxruntime-linux-x64-1.2.0.tgz && \
+    rm onnxruntime-linux-x64-1.2.0.tgz
 
 COPY src app/src
 COPY CMakeLists.txt app/CMakeLists.txt

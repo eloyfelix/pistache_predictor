@@ -1,5 +1,5 @@
 """
-This script trains a multi layer perceptron model and serializes it to be used in LibTorch (C++).
+This script trains a multi layer perceptron model and exports it to ONNX format.
 No test nor validation is done as we only need a "dummy" model to be exported for the demo.
 """
 from rdkit import Chem
@@ -47,7 +47,7 @@ class DatasetSMILES(Dataset):
 train_dataset = DatasetSMILES('CHEMBL1829.csv')
 train_loader = DataLoader(dataset=train_dataset,
                           batch_size=BATCH_SIZE,
-                          num_workers=2,
+                          num_workers=0,
                           shuffle=True)
 
 
@@ -90,6 +90,15 @@ for epoch in range(N_EPOCHS):
                   % (epoch + 1, N_EPOCHS, i + 1, len(train_dataset) // BATCH_SIZE, loss.item()))
 
 
-# serialize the model to be loaded in LibTorch (C++)
+# export the model in torchscript format. It can be later either loaded in PyTorch and LibTorch (C++)
 tsm = torch.jit.trace(mlp, torch.ones(FP_SIZE))
-tsm.save("mlp.pt")
+tsm.save("../src/mlp.pt")
+
+# export the model to be loaded in any ONNX runtime
+torch.onnx.export(mlp,
+                  torch.ones(FP_SIZE),
+                  "../src/mlp.onnx",
+                  export_params=True,
+                  input_names=['input'],
+                  output_names=['output'],
+                  )
