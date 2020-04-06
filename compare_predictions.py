@@ -58,3 +58,5 @@ with torch.no_grad():
 
 # compare C++ REST backend and PyTorch predictions
 np.testing.assert_allclose(to_numpy(pt_preds), cxx_preds, rtol=1e-03, atol=1e-05)
+
+print("Finished! No other output means that predictions from all the different environaments are the same")
