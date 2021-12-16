@@ -1,14 +1,22 @@
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
-ARG RDKIT_VERSION=Release_2020_03_1
+ARG CHEMBL_VERSION=chembl_29
+ARG RDKIT_VERSION=Release_2021_09_2
+ARG ONNX_VERSION=1.10.0
+ARG PISTACHE_COMMIT=b8c0c699879980ed4bf1d31eba490d54d0a7f0ad
 
 RUN apt-get update --fix-missing && \
     apt-get install -y g++ \
                        cmake \
+                       pkg-config \
+                       meson \
+                       python3-setuptools \
+                       libssl-dev \
                        curl \
                        unzip \
                        git \
-                       nlohmann-json-dev \
+                       zlib1g-dev \
+                       nlohmann-json3-dev \
                        libboost-dev \
                        libboost-iostreams-dev \
                        libboost-system-dev \
@@ -26,6 +34,7 @@ RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
     cmake -Wno-dev \
           -DCMAKE_BUILD_TYPE=Release \
           -DRDK_BUILD_INCHI_SUPPORT=ON \
+          -DRDK_BUILD_FREETYPE_SUPPORT=OFF \
           -DCMAKE_INSTALL_PREFIX=/usr \
           -DCMAKE_SYSTEM_PREFIX_PATH=/usr \
           -DRDK_BUILD_PYTHON_WRAPPERS=OFF \
@@ -39,21 +48,27 @@ RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
 # Install pistache
 RUN git clone https://github.com/oktal/pistache.git && \
     cd pistache && \
-    git submodule update --init && \
-    mkdir build && \
-    cd build && \
-    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. && \
-    make && \
-    make install && \
-    rm -rf /pistache*
+    git checkout ${PISTACHE_COMMIT} && \
+    meson setup build \
+      --buildtype=release \
+      -DPISTACHE_USE_SSL=true \
+      -DPISTACHE_BUILD_EXAMPLES=false \
+      -DPISTACHE_BUILD_TESTS=false \
+      -DPISTACHE_BUILD_DOCS=false \
+      --prefix=/usr && \
+    meson compile -C build && \
+    meson install -C build
 
 # Install Ms ONNX runtime
-RUN curl -LO https://github.com/microsoft/onnxruntime/releases/download/v1.2.0/onnxruntime-linux-x64-1.2.0.tgz && \
-    tar -xzf onnxruntime-linux-x64-1.2.0.tgz && \
-    rm onnxruntime-linux-x64-1.2.0.tgz
+RUN curl -LO https://github.com/microsoft/onnxruntime/releases/download/v${ONNX_VERSION}/onnxruntime-linux-x64-${ONNX_VERSION}.tgz && \
+    tar -xzf onnxruntime-linux-x64-${ONNX_VERSION}.tgz && \
+    rm onnxruntime-linux-x64-${ONNX_VERSION}.tgz
 
 COPY src app/src
 COPY CMakeLists.txt app/CMakeLists.txt
+
+# Download the onnx model file
+RUN curl -LJ https://github.com/chembl/chembl_multitask_model/raw/main/${CHEMBL_VERSION}_model/${CHEMBL_VERSION}_multitask.onnx -o app/src/chembl_multitask.onnx
 
 RUN mkdir app/build && \
     cd app/build && \
@@ -61,4 +76,4 @@ RUN mkdir app/build && \
     make && \
     cp PistachePredictor ../../PistachePredictor
 
-CMD ["./PistachePredictor", "9999", "4"]
+CMD ["./PistachePredictor", "9080", "4"]
