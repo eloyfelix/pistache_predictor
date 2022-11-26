@@ -1,9 +1,9 @@
 FROM debian:bullseye-slim
 
-ARG CHEMBL_VERSION=chembl_29
-ARG RDKIT_VERSION=Release_2021_09_2
-ARG ONNX_VERSION=1.10.0
-ARG PISTACHE_COMMIT=b8c0c699879980ed4bf1d31eba490d54d0a7f0ad
+ARG CHEMBL_VERSION=chembl_31
+ARG RDKIT_VERSION=Release_2022_09_2
+ARG ONNX_VERSION=1.12.0
+ARG PISTACHE_COMMIT=769e4f458b85035f51c997e8a58d0dfeb8e5492e
 
 RUN apt-get update --fix-missing && \
     apt-get install -y g++ \
@@ -68,7 +68,7 @@ COPY src app/src
 COPY CMakeLists.txt app/CMakeLists.txt
 
 # Download the onnx model file
-RUN curl -LJ https://github.com/chembl/chembl_multitask_model/raw/main/${CHEMBL_VERSION}_model/${CHEMBL_VERSION}_multitask.onnx -o app/src/chembl_multitask.onnx
+RUN curl -LJ https://github.com/chembl/chembl_multitask_model/raw/main/trained_models/${CHEMBL_VERSION}_model/${CHEMBL_VERSION}_multitask.onnx -o app/src/chembl_multitask.onnx
 
 RUN mkdir app/build && \
     cd app/build && \
