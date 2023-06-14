@@ -7,9 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(PkgConfig)
 pkg_check_modules(Pistache REQUIRED IMPORTED_TARGET libpistache)
 
-find_library(ONNXRUNTIME_LIBRARY onnxruntime HINTS "/onnxruntime-linux-x64-1.12.1/lib")
+find_library(ONNXRUNTIME_LIBRARY onnxruntime HINTS "/onnxruntime-linux-x64-1.15.0/lib")
 
-include_directories("/usr/include/rdkit" "/onnxruntime-linux-x64-1.12.1/include")
+include_directories("/usr/include/rdkit" "/onnxruntime-linux-x64-1.15.0/include")
 
 set(RDKit_LIBS RDKitSmilesParse RDKitGraphMol RDKitFingerprints)
 

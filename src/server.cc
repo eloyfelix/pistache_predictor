@@ -39,12 +39,18 @@ public:
 
         // there is only one input node in this model, using index 0 to get its info
         Ort::AllocatorWithDefaultOptions allocator;
-        input_node_names.push_back(session.GetInputName(0, allocator));
+        auto input_name = session.GetInputNameAllocated(0, allocator);
+        input_node_name_allocated_strings.push_back(std::move(input_name));
+        input_node_names.push_back(input_node_name_allocated_strings.back().get());
 
         // get target names
         size_t output_num_nodes = session.GetOutputCount();
-        for (int i = 0; i < output_num_nodes; i++)
-            output_node_names.push_back(session.GetOutputName(i, allocator));
+        for (int i = 0; i < output_num_nodes; i++) {
+            auto output_name = session.GetOutputNameAllocated(i, allocator);
+            output_node_name_allocated_strings.push_back(std::move(output_name));
+            output_node_names.push_back(output_node_name_allocated_strings.back().get());
+        }
+
         Ort::TypeInfo type_info = session.GetInputTypeInfo(0);
         auto tensor_info = type_info.GetTensorTypeAndShapeInfo();
         ONNXTensorElementDataType type = tensor_info.GetElementType();
@@ -124,8 +130,11 @@ private:
     Ort::Session session{nullptr};
 
     std::vector<const char *> input_node_names;
-    std::vector<const char *> output_node_names;
+    std::vector<Ort::AllocatedStringPtr> input_node_name_allocated_strings;
     std::vector<int64_t> input_node_dims;
+
+    std::vector<const char *> output_node_names;
+    std::vector<Ort::AllocatedStringPtr> output_node_name_allocated_strings;
 
     Rest::Router router;
     std::shared_ptr<Http::Endpoint> httpEndpoint;
