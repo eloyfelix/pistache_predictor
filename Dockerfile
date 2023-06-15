@@ -46,7 +46,7 @@ RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
     rm -rf /rdkit /${RDKIT_VERSION}.tar.gz
 
 # Install pistache
-RUN git clone https://github.com/oktal/pistache.git && \
+RUN git clone https://github.com/pistacheio/pistache.git && \
     cd pistache && \
     git checkout ${PISTACHE_COMMIT} && \
     meson setup build \
@@ -59,7 +59,8 @@ RUN git clone https://github.com/oktal/pistache.git && \
     meson compile -C build && \
     meson install -C build
 
-# Install Ms ONNX runtime
+# Install MS ONNX runtime
+ENV ONNXRUNTIME_ROOTDIR=/onnxruntime-linux-x64-${ONNX_VERSION}
 RUN curl -LO https://github.com/microsoft/onnxruntime/releases/download/v${ONNX_VERSION}/onnxruntime-linux-x64-${ONNX_VERSION}.tgz && \
     tar -xzf onnxruntime-linux-x64-${ONNX_VERSION}.tgz && \
     rm onnxruntime-linux-x64-${ONNX_VERSION}.tgz
