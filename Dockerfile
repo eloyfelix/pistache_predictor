@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 ARG CHEMBL_VERSION=chembl_33
 ARG RDKIT_VERSION=Release_2023_03_2
