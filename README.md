@@ -1,6 +1,6 @@
 # Target prediction C++ REST microservice with ONNX Runtime, RDKit and Pistache
 
-[ChEMBL Multitask Model](https://github.com/chembl/chembl_multitask_model/) C++ REST microservice with [ONNX Runtime](https://microsoft.github.io/onnxruntime/) and [Pistache](https://github.com/oktal/pistache). Molecular fingerprints calculated with [RDKit](https://www.rdkit.org/docs/index.html).
+[ChEMBL Multitask Model](https://github.com/chembl/chembl_multitask_model/) C++ REST microservice with [ONNX Runtime](https://microsoft.github.io/onnxruntime/) and [Pistache](https://github.com/pistacheio/pistache). Molecular fingerprints calculated with [RDKit](https://www.rdkit.org/docs/index.html).
 
 ## To run it
 

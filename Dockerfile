@@ -1,9 +1,9 @@
 FROM debian:bookworm-slim
 
-ARG CHEMBL_VERSION=chembl_34
-ARG RDKIT_VERSION=Release_2024_03_4
-ARG ONNX_VERSION=1.16.1
-ARG PISTACHE_COMMIT=46ffbb8228333b146c0ac2294439ba68623890b3
+ARG CHEMBL_VERSION=chembl_35
+ARG RDKIT_VERSION=Release_2024_09_3
+ARG ONNX_VERSION=1.17.0
+ARG PISTACHE_VERSION=0.4.23
 
 RUN apt-get update --fix-missing && \
     apt-get install -y g++ \
@@ -25,6 +25,21 @@ RUN apt-get update --fix-missing && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
 
+# Install pistache
+RUN curl -LO https://github.com/pistacheio/pistache/archive/v${PISTACHE_VERSION}.tar.gz && \
+    tar -xzf v${PISTACHE_VERSION}.tar.gz && \
+    mv pistache-${PISTACHE_VERSION} pistache && \
+    cd pistache && \
+    meson setup build \
+      --buildtype=release \
+      -DPISTACHE_USE_SSL=true \
+      -DPISTACHE_BUILD_EXAMPLES=false \
+      -DPISTACHE_BUILD_TESTS=false \
+      -DPISTACHE_BUILD_DOCS=false \
+      --prefix=/usr && \
+    meson compile -C build && \
+    meson install -C build
+
 # Install RDKit
 RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
     tar -xzf ${RDKIT_VERSION}.tar.gz && \
@@ -44,20 +59,6 @@ RUN curl -LO https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
     make -j $(nproc) && \
     make install && \
     rm -rf /rdkit /${RDKIT_VERSION}.tar.gz
-
-# Install pistache
-RUN git clone https://github.com/pistacheio/pistache.git && \
-    cd pistache && \
-    git checkout ${PISTACHE_COMMIT} && \
-    meson setup build \
-      --buildtype=release \
-      -DPISTACHE_USE_SSL=true \
-      -DPISTACHE_BUILD_EXAMPLES=false \
-      -DPISTACHE_BUILD_TESTS=false \
-      -DPISTACHE_BUILD_DOCS=false \
-      --prefix=/usr && \
-    meson compile -C build && \
-    meson install -C build
 
 # Install MS ONNX runtime
 ENV ONNXRUNTIME_ROOTDIR=/onnxruntime-linux-x64-${ONNX_VERSION}
